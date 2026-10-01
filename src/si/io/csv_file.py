@@ -5,22 +5,9 @@ from si.data.dataset import Dataset
 
 def read_csv(filename: str, sep: str = ',', features: bool = True, label: bool = False) -> Dataset:
     """
-    Reads a CSV file and returns a Dataset object.
-
-    Parameters
-    ----------
-    filename: str
-        Name/path of the file
-    sep: str
-        Value separator
-    features: bool
-        Whether the file has feature names (first row)
-    label: bool
-        Whether the file has y (assumed to be the last column)
-
-    Returns
-    -------
-    Dataset
+    Reads a CSV file and returns a Dataset.
+    features: True if the first row has the variable names.
+    label: True if the last column is the dependent variable (y).
     """
     df = pd.read_csv(filename, sep=sep, header=0 if features else None)
 
@@ -40,20 +27,9 @@ def read_csv(filename: str, sep: str = ',', features: bool = True, label: bool =
 
 def write_csv(filename: str, dataset: Dataset, sep: str = ',', features: bool = True, label: bool = False) -> None:
     """
-    Writes a Dataset object to a CSV file.
-
-    Parameters
-    ----------
-    filename: str
-        Name/path of the file
-    dataset: Dataset
-        Dataset to write
-    sep: str
-        Value separator
-    features: bool
-        Whether to write the header row with the feature names
-    label: bool
-        Whether to write y as the last column
+    Writes a Dataset to a CSV file.
+    features: True to write the header row with the variable names.
+    label: True to write the y as the last column.
     """
     df = pd.DataFrame(dataset.X, columns=dataset.features)
 
