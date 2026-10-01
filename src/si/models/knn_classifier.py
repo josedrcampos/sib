@@ -3,7 +3,7 @@ from typing import Callable, Union
 import numpy as np
 
 from si.base.model import Model
-from si.base.dataset import Dataset
+from si.data.dataset import Dataset
 from si.metrics.accuracy import accuracy
 from si.statistics.euclidean_distance import euclidean_distance
 
@@ -24,11 +24,11 @@ class KNNClassifier(Model):
     def _get_closest_label(self, sample: np.ndarray):
         distances = self.distance(sample, self.dataset.X)
         
-        #todos os vizinhos da k distância mais próxima (?) - escolher os 3 vizinhos mais próximos, pomos k=3
+        # all neighbours from the closest k distance (?) - choose the 3 closestt neighbours, so k=3
         k_nearest_neighbors = np.argsort(distances)[: self.k]
 
         k_nearest_neighbors_labels = self.dataset.y[k_nearest_neighbors]
-        #queremos também saber o que são esses vizinhos, o que está nessas distâncias mais próximas
+        #we also want to know what are those neighbours, and what is in those closest distances (?) to confirm
         labels, counts = np.unique(k_nearest_neighbors_labels, return_counts=True)
         return labels[np.argmax(counts)]
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     from si.data.dataset import Dataset
     from si.model_selection.split import train_test_split
     
-    #load and split the dataseti
+    #load and split the dataset
     dataset_ = Dataset.from_random(600, q00, 2)
     dataset_train, dataset_test = train_test_split(dataset__, test_size=0.2)
     
