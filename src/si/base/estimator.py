@@ -50,6 +50,7 @@ class Estimator(metaclass=ABCMeta):
             The fitted estimator.
         """
 
+    @property
     def is_fitted(self) -> bool:
         """
         Whether the estimator is fitted.

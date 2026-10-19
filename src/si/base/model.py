@@ -1,6 +1,9 @@
-from abc import ABCMeta, ABC, abstractmethod
+from abc import ABC, abstractmethod
+
+import numpy as np
 
 from si.base.estimator import Estimator
+from si.data.dataset import Dataset
 
 
 class Model(Estimator, ABC):
@@ -15,7 +18,7 @@ class Model(Estimator, ABC):
         """
         super().__init__(**kwargs)
 
-    def predict(self, dataset):
+    def predict(self, dataset: Dataset) -> np.ndarray:
         """
         Predict the target values of the dataset.
         The model needs to be fitted before calling this method.
@@ -35,7 +38,7 @@ class Model(Estimator, ABC):
         return self._predict(dataset)
 
     @abstractmethod
-    def _predict(self, dataset):
+    def _predict(self, dataset: Dataset) -> np.ndarray:
         """
         Predict the target values of the dataset.
         Abstract method that needs to be implemented by all subclasses.
@@ -50,8 +53,9 @@ class Model(Estimator, ABC):
         predictions: np.ndarray
             The predicted target values.
         """
+        raise NotImplementedError
 
-    def fit_predict(self, dataset):
+    def fit_predict(self, dataset: Dataset) -> np.ndarray:
         """
         Fit the model to the dataset and predict the target values.
         Equivalent to calling fit(dataset) and then predict(dataset).
@@ -69,7 +73,7 @@ class Model(Estimator, ABC):
         self.fit(dataset)
         return self.predict(dataset)
 
-    def score(self, dataset):
+    def score(self, dataset: Dataset) -> float:
         """
         Computes the score of the model on the dataset.
         The model needs to be fitted before calling this method.
@@ -89,7 +93,7 @@ class Model(Estimator, ABC):
         return self._score(dataset, predictions)
 
     @abstractmethod
-    def _score(self, dataset, predictions):
+    def _score(self, dataset: Dataset, predictions: np.ndarray) -> float:
         """
         Computes the score between the real and predicted values.
         Abstract method that needs to be implemented by all subclasses.
@@ -105,3 +109,4 @@ class Model(Estimator, ABC):
         -------
         score: float
         """
+        raise NotImplementedError
