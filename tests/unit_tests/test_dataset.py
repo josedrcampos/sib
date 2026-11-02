@@ -29,3 +29,68 @@ class TestDataset(unittest.TestCase):
         dataset = Dataset.from_random(10, 5, 3, features=['a', 'b', 'c', 'd', 'e'], label='y')
         self.assertEqual((10, 5), dataset.shape())
         self.assertTrue(dataset.has_label())
+
+    def test_dropna(self):
+        X = np.array([[1.0, 2.0, 3.0],
+                      [np.nan, 5.0, 6.0],
+                      [7.0, 8.0, 9.0],
+                      [1.0, np.nan, np.nan]])
+        y = np.array([0, 1, 0, 1])
+        dataset = Dataset(X, y)
+
+        result = dataset.dropna()
+
+        self.assertIs(result, dataset)                     # returns self
+        self.assertEqual((2, 3), dataset.shape())
+        self.assertFalse(np.isnan(dataset.X).any())
+        self.assertEqual([0, 0], dataset.y.tolist())       # y updated with X
+
+    def test_fillna_value(self):
+        X = np.array([[1.0, np.nan], [3.0, 4.0], [np.nan, 8.0]])
+        dataset = Dataset(X, np.array([0, 1, 0]))
+
+        dataset.fillna(0.5)
+
+        self.assertFalse(np.isnan(dataset.X).any())
+        self.assertEqual(0.5, dataset.X[0, 1])
+        self.assertEqual(0.5, dataset.X[2, 0])
+        self.assertEqual((3, 2), dataset.shape())          # no rows removed
+
+    def test_fillna_mean(self):
+        X = np.array([[1.0, np.nan], [3.0, 4.0], [np.nan, 8.0]])
+        dataset = Dataset(X, np.array([0, 1, 0]))
+
+        dataset.fillna("mean")
+
+        self.assertEqual(2.0, dataset.X[2, 0])             # mean of [1, 3]
+        self.assertEqual(6.0, dataset.X[0, 1])             # mean of [4, 8]
+
+    def test_fillna_median(self):
+        X = np.array([[1.0, 10.0], [2.0, np.nan], [9.0, 20.0], [np.nan, 30.0]])
+        dataset = Dataset(X, np.array([0, 1, 0, 1]))
+
+        dataset.fillna("median")
+
+        self.assertEqual(2.0, dataset.X[3, 0])             # median of [1, 2, 9]
+        self.assertEqual(20.0, dataset.X[1, 1])            # median of [10, 20, 30]
+
+    def test_fillna_invalid(self):
+        dataset = Dataset(np.array([[1.0, np.nan]]))
+        with self.assertRaises(ValueError):
+            dataset.fillna("mode")
+
+    def test_remove_by_index(self):
+        X = np.array([[1, 2], [3, 4], [5, 6]])
+        y = np.array([0, 1, 2])
+        dataset = Dataset(X, y)
+
+        result = dataset.remove_by_index(1)
+
+        self.assertIs(result, dataset)
+        self.assertEqual([[1, 2], [5, 6]], dataset.X.tolist())
+        self.assertEqual([0, 2], dataset.y.tolist())
+
+    def test_remove_by_index_out_of_range(self):
+        dataset = Dataset(np.array([[1, 2], [3, 4]]), np.array([0, 1]))
+        with self.assertRaises(IndexError):
+            dataset.remove_by_index(5)

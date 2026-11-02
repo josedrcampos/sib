@@ -126,6 +126,78 @@ class Dataset:
         }
         return pd.DataFrame.from_dict(data, orient="index", columns=self.features)
 
+    def dropna(self) -> 'Dataset':
+        """
+        Removes every sample (row) that has at least one NaN in X.
+        The matching entries of y are removed too, so X and y stay aligned.
+
+        Returns
+        -------
+        self: Dataset
+            The modified dataset (changed in place).
+        """
+        self.X = self.X.astype(float)
+        # True for the rows that have any NaN
+        nan_rows = np.isnan(self.X).any(axis=1)
+        keep = ~nan_rows
+
+        self.X = self.X[keep]
+        if self.has_label():
+            self.y = self.y[keep]
+        return self
+
+    def fillna(self, value: Union[float, str]) -> 'Dataset':
+        """
+        Replaces every NaN in X by a fixed value, or by the mean or median of its feature.
+
+        Parameters
+        ----------
+        value: float or str
+            A number, "mean" or "median".
+
+        Returns
+        -------
+        self: Dataset
+            The modified dataset (changed in place).
+        """
+        self.X = self.X.astype(float)
+
+        if value == "mean":
+            fill_values = np.nanmean(self.X, axis=0)      # one value per feature
+        elif value == "median":
+            fill_values = np.nanmedian(self.X, axis=0)
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            fill_values = np.full(self.X.shape[1], float(value))
+        else:
+            raise ValueError('value must be a number, "mean" or "median"')
+
+        # broadcasting: fill_values (n_features,) is repeated for every row
+        self.X = np.where(np.isnan(self.X), fill_values, self.X)
+        return self
+
+    def remove_by_index(self, index: int) -> 'Dataset':
+        """
+        Removes the sample at the given index from X (and from y, if it exists).
+
+        Parameters
+        ----------
+        index: int
+            Index of the sample to remove.
+
+        Returns
+        -------
+        self: Dataset
+            The modified dataset (changed in place).
+        """
+        n_samples = self.X.shape[0]
+        if not -n_samples <= index < n_samples:
+            raise IndexError(f"index {index} is out of range for {n_samples} samples")
+
+        self.X = np.delete(self.X, index, axis=0)
+        if self.has_label():
+            self.y = np.delete(self.y, index, axis=0)
+        return self
+
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame, label: str = None):
         """
@@ -145,11 +217,13 @@ class Dataset:
         if label:
             X = df.drop(label, axis=1).to_numpy()
             y = df[label].to_numpy()
+            # the label column is not a feature
+            features = df.drop(label, axis=1).columns.tolist()
         else:
             X = df.to_numpy()
             y = None
+            features = df.columns.tolist()
 
-        features = df.columns.tolist()
         return cls(X, y, features=features, label=label)
 
     def to_dataframe(self) -> pd.DataFrame:
